@@ -14,6 +14,7 @@ import io.reactivex.rxjava3.core.Observer
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import java.io.Serializable
+import java.util.concurrent.TimeUnit
 
 private const val TAG = "ObservableActivity"
 
@@ -195,6 +196,108 @@ class ObservableActivity : AppCompatActivity() {
 
         val arrayUser = arrayOf(user1, user2)
         return Observable.just(arrayUser, strData, user3)
+    }
+
+    private fun getObserverInterval(): Observer<Long> {
+        return object : Observer<Long> {
+            override fun onSubscribe(d: Disposable) {
+                Log.e(TAG, "onSubscribe: ")
+                mDisposable = d
+            }
+
+            override fun onNext(t: Long) {
+                Log.e(TAG, "onNext: $t")
+                if (t.toInt() == 3) {
+                    mDisposable?.dispose()
+                }
+            }
+
+            override fun onError(e: Throwable) {
+                Log.e(TAG, "onError: " + e.printStackTrace())
+            }
+
+            override fun onComplete() {
+                Log.e(TAG, "onComplete: " + Thread.currentThread().name)
+            }
+        }
+    }
+
+    /**
+     * tạo ra 1 observable bằng interval(): tạo ra 1 observable phát ra 1 chuỗi các số nguyên
+     * cách nhau 1 khoảng thời gian cụ thể
+     * */
+    private fun getObservableInterval(): Observable<Long> {
+        // initDelay: khi kết nối với nhau thì sau bao lâu sẽ phát ra tín hiệu
+        // period: sau khoảng thời gian sẽ phát ra.
+        return Observable.interval(3, 5, TimeUnit.SECONDS)
+    }
+
+    /**
+     * tạo ra 1 observable bằng timer(): tạo ra 1 observable phát ra 1 số nguyên
+     * sau khoảng thời gian delay cho trước
+     * */
+    private fun getObservableTimer(): Observable<Long> {
+        // delay: khoảng thời gian delay
+        return Observable.timer(3, TimeUnit.SECONDS)
+    }
+
+    /**
+     * tạo ra 1 observable bằng ranger(): 1 dải interger sau đó lần lượt phát ra từng interger trong đó.
+     * */
+    private fun getObservableRanger(): Observable<Int> {
+        return Observable.range(1, 10)
+    }
+
+    /**
+     * tạo ra 1 observable bằng repeat(): tạo 1 Observable mà có thể lặp đi lặp lại việc phát ra dữ liệu.
+     * Bạn có thể hạn chế số lần lặp lại bằng cách set repeat(số lần lặp).
+     * */
+    private fun getObservableRepeat(): Observable<Int> {
+        // times: số lần lặp
+        return Observable.range(1, 10).repeat(2)
+    }
+
+    /**
+     * tạo ra 1 observable bằng defer(): không tạo ra Observable cho đến khi có ít nhất 1 subcriber được
+     * đăng kí và nó sẽ luôn tạo mới 1 observable tương ứng với mỗi subcriber.
+     * */
+    private fun getObservableDefer() {
+        val user1 = User(1, "User 1")
+//        val observable: Observable<String> = user1.getNameObservable()
+        val observable: Observable<String> = user1.getNameDeferObservable()
+        val observer = getObserverDefer()
+
+        user1.name = "User 2"
+        // log ra User 1. nếu sử dụng just.
+        // log ra User 2. nếu sử dụng defer. thay đổi sau khi observable được khởi tạo.
+        // defer chưa tạo ra nếu chưa có thằng đăng kí nắng nghe nó.
+
+
+        observable.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(observer)
+    }
+
+    private fun getObserverDefer(): Observer<String> {
+        return object : Observer<String> {
+            override fun onSubscribe(d: Disposable) {
+                Log.e(TAG, "onSubscribe: ")
+                mDisposable = d
+            }
+
+            override fun onNext(s: String) {
+
+            }
+
+            override fun onError(e: Throwable) {
+                Log.e(TAG, "onError: " + e.printStackTrace())
+            }
+
+            override fun onComplete() {
+                Log.e(TAG, "onComplete: " + Thread.currentThread().name)
+            }
+
+        }
     }
 
     override fun onDestroy() {
