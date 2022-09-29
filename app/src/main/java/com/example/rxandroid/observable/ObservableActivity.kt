@@ -4,8 +4,10 @@ import android.os.Bundle
 import android.os.PersistableBundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import com.example.rxandroid.FileUtils
 import com.example.rxandroid.R
 import com.example.rxandroid.User
+import com.example.rxandroid.models.PhotoModel
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.ObservableEmitter
@@ -298,6 +300,28 @@ class ObservableActivity : AppCompatActivity() {
             }
 
         }
+    }
+
+    private var offset = 1
+    private fun getAllPhoto() {
+        Observable.just(FileUtils.getAllPhotoFromDevice(this, offset))
+            .subscribeOn(Schedulers.io())
+            .subscribe(object : Observer<ArrayList<PhotoModel>> {
+                override fun onSubscribe(d: Disposable) {}
+
+                override fun onNext(photoModels: ArrayList<PhotoModel>) {
+                    runOnUiThread {
+                        if (photoModels.size > 0) {
+                            // add list
+                        }
+                    }
+                }
+
+                override fun onError(e: Throwable) {}
+                override fun onComplete() {
+                    offset++
+                }
+            })
     }
 
     override fun onDestroy() {
